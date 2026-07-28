@@ -76,6 +76,31 @@ function studentMessageBody({ leastCompletedSubject, reducedLoad }) {
   return `${loadPart}${leastCompletedSubject}부터 먼저 시작해서 중요한 계획을 하나씩 완료해봅시다.`.trim();
 }
 
+const parentDeletionBlockedReason = '필수 계획 삭제는 보호자 승인이 필요한 항목이라 자동으로 반영하지 않았어요.';
+
+function modifyReducedMessage() {
+  return '오늘 컨디션을 반영해 분량을 줄여서 이어서 진행할 수 있게 조정했어요.';
+}
+
+function modifyShortenedMessage() {
+  return '짧게 시작한 뒤 집중 상태를 다시 확인해볼 수 있도록 시간을 줄였어요.';
+}
+
+function modifyRescheduleMessage() {
+  return '지금 시간이 맞지 않는 것 같아 다른 시간대로 옮겨봤어요.';
+}
+
+function modifyRemovedMessage(tier) {
+  switch (tier) {
+    case 'bonus':
+      return '보너스 계획이라 부담 없이 오늘 계획에서 제외했어요.';
+    case 'optional':
+      return '선택 계획이라 오늘 계획에서 제외했어요.';
+    default:
+      return '오늘 수행 가능한 범위로 조정했어요.';
+  }
+}
+
 module.exports = {
   conditionAdjustmentReason,
   loadTierReason,
@@ -85,4 +110,9 @@ module.exports = {
   hardCapReason,
   studentMessageTitle,
   studentMessageBody,
+  parentDeletionBlockedReason,
+  modifyReducedMessage,
+  modifyShortenedMessage,
+  modifyRescheduleMessage,
+  modifyRemovedMessage,
 };
