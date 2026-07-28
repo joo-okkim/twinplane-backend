@@ -101,6 +101,32 @@ function modifyRemovedMessage(tier) {
   }
 }
 
+function reviewCompletedRequired() {
+  return '오늘 필수 계획을 완료했어요.';
+}
+
+function reviewCompletedItem(title) {
+  return `"${title}"을(를) 완료했어요.`;
+}
+
+function reviewSlowerThanPlanned(subject, extraMinutes) {
+  return `${subject}은(는) 예상보다 ${extraMinutes}분 더 걸렸어요. 다음에는 시간을 조금 더 넉넉히 잡아볼게요.`;
+}
+
+function reviewFasterThanPlanned(subject) {
+  return `${subject}은(는) 예상보다 빠르게 완료했어요.`;
+}
+
+function reviewIncompleteGentle(title) {
+  return `"${title}"은(는) 다음 계획에서 조정해볼게요.`;
+}
+
+function reviewEncouragement(overallRate) {
+  if (overallRate >= 90) return '오늘 정말 잘 해냈어요. 이 흐름 그대로 내일도 이어가봐요!';
+  if (overallRate >= 70) return '완료한 부분을 기준으로 다음 계획을 개선하겠습니다. 오늘도 수고했어요!';
+  return '오늘 수행 가능한 범위로 조정했습니다. 다시 시작해봐도 충분해요!';
+}
+
 module.exports = {
   conditionAdjustmentReason,
   loadTierReason,
@@ -115,4 +141,10 @@ module.exports = {
   modifyShortenedMessage,
   modifyRescheduleMessage,
   modifyRemovedMessage,
+  reviewCompletedRequired,
+  reviewCompletedItem,
+  reviewSlowerThanPlanned,
+  reviewFasterThanPlanned,
+  reviewIncompleteGentle,
+  reviewEncouragement,
 };
