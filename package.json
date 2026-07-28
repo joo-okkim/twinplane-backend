@@ -1,0 +1,14 @@
+{
+  "name": "twinplane-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node.js/LLM backend for the twinplane AI Teacher app",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
