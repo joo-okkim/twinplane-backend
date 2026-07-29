@@ -175,3 +175,47 @@ CREATE TABLE daily_reviews (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (student_id, review_date)
 );
+
+-- One row per generated comprehension-check attempt. plan_item_client_id is
+-- the PlanItem.id ("plan-7" etc.) that triggered generation, stored for
+-- traceability only -- not FK'd from anywhere else, same reasoning as why
+-- plan_items.client_id isn't globally unique. No uniqueness constraint on
+-- (student_id, plan_item_client_id): re-takes are unlimited by design.
+CREATE TABLE assessments (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  plan_item_client_id TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'generated', -- 'generated' | 'submitted'
+  score INT,
+  submitted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX assessments_student_idx ON assessments (student_id, created_at DESC);
+
+-- correct_answer/explanation are read here but only ever serialized into a
+-- response once the assessment is submitted -- see src/routes/assessments.js.
+CREATE TABLE assessment_questions (
+  id SERIAL PRIMARY KEY,
+  assessment_id INT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+  sequence INT NOT NULL,
+  question_type TEXT NOT NULL, -- 'multiple_choice' | 'short_answer'
+  question_text TEXT NOT NULL,
+  choices JSONB NOT NULL DEFAULT '[]',
+  correct_answer TEXT NOT NULL,
+  explanation TEXT NOT NULL,
+  UNIQUE (assessment_id, sequence)
+);
+
+-- UNIQUE(question_id) makes the submit handler idempotent (ON CONFLICT),
+-- safe to retry/resubmit.
+CREATE TABLE assessment_answers (
+  id SERIAL PRIMARY KEY,
+  assessment_id INT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+  question_id INT NOT NULL REFERENCES assessment_questions(id) ON DELETE CASCADE,
+  student_answer TEXT NOT NULL,
+  is_correct BOOLEAN NOT NULL,
+  feedback TEXT NOT NULL,
+  UNIQUE (question_id)
+);
