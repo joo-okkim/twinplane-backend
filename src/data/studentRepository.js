@@ -186,13 +186,13 @@ async function saveDailyReview(studentId, dateStr, reviewResponse) {
     [
       studentId,
       dateStr,
-      reviewResponse.achievement,
-      reviewResponse.subjectResults,
-      reviewResponse.completedWell,
-      reviewResponse.improvementPoints,
+      JSON.stringify(reviewResponse.achievement),
+      JSON.stringify(reviewResponse.subjectResults),
+      JSON.stringify(reviewResponse.completedWell),
+      JSON.stringify(reviewResponse.improvementPoints),
       reviewResponse.studentMessage,
       reviewResponse.parentMessage,
-      reviewResponse.rewardResult,
+      JSON.stringify(reviewResponse.rewardResult),
     ],
   );
 }

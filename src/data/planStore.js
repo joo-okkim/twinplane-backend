@@ -32,14 +32,14 @@ async function saveDailyPlan(studentId, dateStr, response) {
       [
         studentId,
         dateStr,
-        response.planSummary,
-        response.generationReasons,
-        response.studentMessage,
-        response.parentMessage,
-        response.rewardForecast,
-        response.carryOverDecisions,
-        response.warnings,
-        response.validation,
+        JSON.stringify(response.planSummary),
+        JSON.stringify(response.generationReasons),
+        JSON.stringify(response.studentMessage),
+        JSON.stringify(response.parentMessage),
+        JSON.stringify(response.rewardForecast),
+        JSON.stringify(response.carryOverDecisions),
+        JSON.stringify(response.warnings),
+        JSON.stringify(response.validation),
       ],
     );
     const dailyPlanId = rows[0].id;
@@ -49,7 +49,7 @@ async function saveDailyPlan(studentId, dateStr, response) {
       await client.query(
         `INSERT INTO plan_items (daily_plan_id, student_id, plan_date, client_id, sequence, item)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [dailyPlanId, studentId, dateStr, item.id, item.sequence, item],
+        [dailyPlanId, studentId, dateStr, item.id, item.sequence, JSON.stringify(item)],
       );
     }
 
@@ -94,7 +94,7 @@ async function findItemByClientId(studentId, clientId) {
 
 async function updateItem(dailyPlanId, clientId, updatedItem) {
   await pool.query('UPDATE plan_items SET item = $1 WHERE daily_plan_id = $2 AND client_id = $3', [
-    updatedItem,
+    JSON.stringify(updatedItem),
     dailyPlanId,
     clientId,
   ]);
