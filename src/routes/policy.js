@@ -1,16 +1,27 @@
 const { Router } = require('express');
-const { stickerPolicy, allowancePolicy } = require('../data/stubs');
+const requireAuth = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
+const studentRepository = require('../data/studentRepository');
 
 const router = Router();
+router.use(requireAuth);
 
 // GET /api/policy/sticker
-router.get('/sticker', (req, res) => {
-  res.json(stickerPolicy);
-});
+router.get(
+  '/sticker',
+  asyncHandler(async (req, res) => {
+    const dataset = await studentRepository.loadDataset(req.studentId);
+    res.json(dataset.stickerPolicy);
+  }),
+);
 
 // GET /api/policy/allowance
-router.get('/allowance', (req, res) => {
-  res.json(allowancePolicy);
-});
+router.get(
+  '/allowance',
+  asyncHandler(async (req, res) => {
+    const dataset = await studentRepository.loadDataset(req.studentId);
+    res.json(dataset.allowancePolicy);
+  }),
+);
 
 module.exports = router;

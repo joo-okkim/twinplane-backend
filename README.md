@@ -14,11 +14,10 @@ for the current handoff status.
 
 ## Status
 
-All 9 contract endpoints are implemented. The 6 `GET` endpoints return
-static stub data matching the contract's example payloads. The 3 `POST`
-endpoints run the same rule engine as the frontend mock, ported line-for-
-line from the reference implementation, and verified to match
-`API_CONTRACT.md`'s example payloads:
+All 9 contract endpoints are implemented, backed by Postgres, with
+username/password login gating everything except `POST /api/auth/login`.
+The 3 `POST` endpoints run the same rule engine as the frontend mock,
+ported line-for-line from the reference implementation:
 
 | Endpoint | Ported from |
 |---|---|
@@ -26,16 +25,23 @@ line from the reference implementation, and verified to match
 | `POST /api/plans/modify` | `lib/services/mock/modification_logic.dart` → `src/logic/modification.js` |
 | `POST /api/reviews/daily` | `lib/services/mock/review_logic.dart` → `src/logic/review.js` |
 
-State is an in-memory per-date plan cache (`src/data/planStore.js`,
-mirrors `MockAiTeacherRepository._plansByDate`) — fine for local dev
-against a single running process, not for production. Not yet built: real
-persistence/DB, auth, and the single hardcoded student dataset
-(`src/data/studentDataset.js`) staying in sync with a real data source.
+Multiple students are supported, each with their own real, persisted data
+(profile, subjects, assignments, exams, fixed schedules, policies, plan/
+review history) — see `db/schema.sql`. `recent_performance` is updated
+after every review, so plan generation actually adapts to a student's real
+history over time, not just a frozen snapshot. Not yet built: self-serve
+registration (`scripts/seed.js` is the only way to create an account today)
+and the "AI generates & grades practice problems for a registered
+homework/exam scope" idea — `assignments`/`exams` already have a `scope`
+column reserved for that.
 
 ## Getting started
 
 ```bash
 npm install
+cp .env.example .env   # fill in DATABASE_URL / JWT_SECRET
+psql "$DATABASE_URL" -f db/schema.sql
+node scripts/seed.js   # creates jiyoon/jiho/jia demo accounts
 npm run dev
 ```
 
@@ -46,21 +52,28 @@ Server starts on `http://localhost:4000` (override with `PORT`, see
 
 ```
 src/
-  index.js              Express app entry, route mounting
-  routes/                One file per resource (student, parent, policy, plans, reviews)
-  logic/                 Rule engine ported from the frontend mock (planGeneration, modification, review, messageBank)
-  data/stubs.js          Static example payloads for the GET endpoints
-  data/studentDataset.js The single fixed dummy student dataset the rule engine reasons over
-  data/planStore.js      In-memory per-date generated-plan cache
+  index.js                  Express app entry: dotenv, cors, route mounting
+  db/pool.js                pg.Pool from DATABASE_URL
+  middleware/auth.js        Verifies Authorization: Bearer <token>, sets req.studentId
+  middleware/asyncHandler.js Wraps async route handlers so rejections reach the error handler
+  routes/                   One file per resource (auth, student, parent, policy, plans, reviews)
+  logic/                    Rule engine ported from the frontend mock (planGeneration, modification, review, messageBank) -- pure functions, untouched by the DB migration
+  data/studentRepository.js Loads a per-student dataset shaped exactly like the old hardcoded constant; updates recent_performance after each review
+  data/planStore.js         Postgres-backed daily_plans/plan_items persistence + modify-by-id lookup
+  data/studentDataset.js    Now only a seed-data source (see scripts/seed.js), not read at runtime
+  data/stubs.js             Same -- seed-data source only
+db/schema.sql                Postgres schema, apply once via psql -f
+scripts/seed.js               Creates the 3 demo accounts (safe to re-run, skips existing usernames)
 ```
 
 ## Connecting the Flutter app
 
-Point the frontend at this server:
+Point the frontend at this server and log in as one of the seeded accounts
+(`jiyoon`/`jiho`/`jia`, password `5447`):
 
 ```bash
 flutter run --dart-define=USE_MOCK=false --dart-define=API_BASE_URL=http://localhost:4000
 ```
 
-No Flutter code changes needed — see the frontend's API_CONTRACT.md
-"Switching the app to the real backend" section.
+See the frontend's API_CONTRACT.md "Switching the app to the real backend"
+section.
