@@ -14,9 +14,9 @@ for the current handoff status.
 
 ## Status
 
-All 9 contract endpoints are implemented, backed by Postgres, with
+All 11 contract endpoints are implemented, backed by Postgres, with
 username/password login gating everything except `POST /api/auth/login`.
-The 3 `POST` endpoints run the same rule engine as the frontend mock,
+The 3 rule-engine `POST` endpoints run the same logic as the frontend mock,
 ported line-for-line from the reference implementation:
 
 | Endpoint | Ported from |
@@ -25,15 +25,20 @@ ported line-for-line from the reference implementation:
 | `POST /api/plans/modify` | `lib/services/mock/modification_logic.dart` → `src/logic/modification.js` |
 | `POST /api/reviews/daily` | `lib/services/mock/review_logic.dart` → `src/logic/review.js` |
 
+`POST /api/assessments/generate` and `POST /api/assessments/:id/submit`
+(이해도 확인) are LLM-backed rather than ported from the mock's canned
+questions: Claude generates a 5-question quiz from the plan item's resolved
+scope and grades short-answer responses (multiple-choice is graded by
+direct comparison) — see `src/routes/assessments.js` and `src/llm/`.
+Requires `ANTHROPIC_API_KEY` in `.env`; `LLM_PROVIDER` fails loudly at boot
+if set to anything other than an implemented provider.
+
 Multiple students are supported, each with their own real, persisted data
 (profile, subjects, assignments, exams, fixed schedules, policies, plan/
 review history) — see `db/schema.sql`. `recent_performance` is updated
 after every review, so plan generation actually adapts to a student's real
 history over time, not just a frozen snapshot. Not yet built: self-serve
-registration (`scripts/seed.js` is the only way to create an account today)
-and the "AI generates & grades practice problems for a registered
-homework/exam scope" idea — `assignments`/`exams` already have a `scope`
-column reserved for that.
+registration (`scripts/seed.js` is the only way to create an account today).
 
 ## Getting started
 
