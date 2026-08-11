@@ -10,7 +10,12 @@
 CREATE TABLE students (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  -- Exactly one auth method per account: password_hash for username/password
+  -- accounts, oauth_provider+oauth_id for Kakao/Google signup -- see
+  -- src/routes/auth.js and src/data/newAccountDefaults.js.
+  password_hash TEXT,
+  oauth_provider TEXT, -- 'kakao' | 'google' | NULL
+  oauth_id TEXT, -- provider's user id, NULL for password accounts
   name TEXT NOT NULL,
   grade_level TEXT NOT NULL,
   wake_up_time TEXT NOT NULL,
@@ -20,8 +25,13 @@ CREATE TABLE students (
   max_concentration_minutes INT NOT NULL,
   condition TEXT NOT NULL DEFAULT 'normal',
   condition_memo TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT students_exactly_one_auth_method CHECK (
+    (password_hash IS NOT NULL AND oauth_provider IS NULL AND oauth_id IS NULL) OR
+    (password_hash IS NULL AND oauth_provider IS NOT NULL AND oauth_id IS NOT NULL)
+  )
 );
+CREATE UNIQUE INDEX students_oauth_identity_uidx ON students (oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL;
 
 CREATE TABLE subject_levels (
   id SERIAL PRIMARY KEY,
