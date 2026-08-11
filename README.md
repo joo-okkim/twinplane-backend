@@ -14,9 +14,10 @@ for the current handoff status.
 
 ## Status
 
-All 11 contract endpoints are implemented, backed by Postgres, with
-username/password login gating everything except `POST /api/auth/login`.
-The 3 rule-engine `POST` endpoints run the same logic as the frontend mock,
+All 13 contract endpoints are implemented, backed by Postgres, with
+username/password login gating everything except `POST /api/auth/login` and
+the two social-login endpoints below. The 3 rule-engine `POST` endpoints run
+the same logic as the frontend mock,
 ported line-for-line from the reference implementation:
 
 | Endpoint | Ported from |
@@ -32,6 +33,14 @@ scope and grades short-answer responses (multiple-choice is graded by
 direct comparison) — see `src/routes/assessments.js` and `src/llm/`.
 Requires `ANTHROPIC_API_KEY` in `.env`; `LLM_PROVIDER` fails loudly at boot
 if set to anything other than an implemented provider.
+
+`POST /api/auth/oauth/kakao` and `POST /api/auth/oauth/google` are Kakao/Google
+간편가입 — first login for a given social account auto-creates a blank-slate
+student (`src/data/newAccountDefaults.js`), no separate registration step.
+Kakao needs no server config (it validates the client's access token by
+calling `kapi.kakao.com` itself); Google needs `GOOGLE_CLIENT_ID` in `.env`
+or the endpoint responds `501` instead of accepting unverifiable tokens. See
+`src/routes/auth.js` and the frontend's `docs/API_CONTRACT.md`.
 
 Multiple students are supported, each with their own real, persisted data
 (profile, subjects, assignments, exams, fixed schedules, policies, plan/
